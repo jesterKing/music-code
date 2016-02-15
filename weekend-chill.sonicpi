@@ -7,12 +7,9 @@ load_samples [:drum_snare_hard, :drum_snare_soft, :perc_snap, :drum_bass_soft, :
 stopit = false
 stopit2 = false
 
-#with_fx :bitcrusher, sample_rate: 3000, bits: 16, cutoff: 100 do
-
 live_loop :beat do
   sample :bd_gas, amp: (ring 4, 3, 2, 1).tick
   sleep 1
-  puts "done with beat" if stopit2
   stop if stopit2
 end
 
@@ -23,47 +20,32 @@ quarter = 1.0 / 4 # 0.25
 eighth = 1.0 / 8 # 0.125
 sixteenth = 1.0 / 16 # 0.125 / 2
 
-#with_fx :reverb, room: 0.05, damp: 0.9, mix: 0.5 do
 pedalit = false
-progression = (spread 2, 5, rotate: 2)
-#puts progression
 live_loop :bd, auto_cue: false do
-  revolution = progression.tick
+  revolution = (spread 2, 5, rotate: 2).tick
   3.times do # 3*4
     sync :beat
-    sample :drum_snare_hard
-    sample :drum_cymbal_pedal, amp: 0.7 if pedalit
+    in_thread do
+      8.times do
+        sample :drum_cymbal_pedal, amp: (ring 0.7, 0.2, 0.2, 0.2, 0.6, 0.2, 0.1, 0.2).tick(:pedal) if pedalit
+        sleep half
+      end
+    end
+    in_thread do
+      6.times do
+        sample (ring :drum_snare_hard, :drum_snare_soft, :drum_bass_soft, :drum_snare_hard, :drum_bass_hard, :drum_snare_soft).tick(:basstick)
+        sleep (ring quarter, quarter, half, half, one, one+quarter).look(:basstick)
+      end
+    end
+
     sleep quarter
-    sample :drum_snare_soft
     sample :perc_snap
-    sleep quarter
-    sample :drum_cymbal_pedal, amp: 0.2 if pedalit
-    sample :drum_bass_soft
-    sleep half
-    sample :drum_cymbal_pedal, amp: 0.2 if pedalit
-    sample :drum_snare_hard
-    sleep half
-    sample :drum_cymbal_pedal, amp: 0.2 if pedalit
-    sample :drum_bass_hard
-    sleep half
-    sample :drum_cymbal_pedal, amp: 0.6 if pedalit
-    sleep half
-    sample :drum_cymbal_pedal, amp: 0.2 if pedalit
-    sample :drum_snare_soft
-    sleep half
-    sample :drum_cymbal_pedal, amp: 0.1 if pedalit
-    sleep half
-    sample :drum_cymbal_pedal, amp: 0.2 if pedalit
-    sleep quarter
-    sample :drum_snare_soft, amp: 0.1
-    sleep sixteenth
-    sample :drum_snare_soft, amp: 0.2
-    sleep sixteenth
-    sample :drum_snare_soft, amp: 0.4
-    sample :drum_bass_soft
-    sleep sixteenth
-    sample :drum_snare_soft, amp: 0.6
-    sleep sixteenth
+    sleep bar - half
+
+    4.times do
+      sample :drum_snare_soft, amp: (ring 0.1, 0.2, 0.4, 0.6).tick(:sns)
+      sleep sixteenth
+    end
   end
   pedalit = revolution == false
   sync :beat
@@ -76,7 +58,6 @@ live_loop :bd, auto_cue: false do
     sleep sixteenth
   end
   sample :drum_cymbal_pedal, amp: 0.6 if pedalit
-
   sleep 3 * quarter
   sample :drum_splash_soft if pedalit
   sleep 3 * quarter
@@ -87,22 +68,17 @@ live_loop :bd, auto_cue: false do
     sample :drum_cymbal_pedal, amp: 1.2 / ctr if ctr == 2 || ctr == 4 if pedalit
     sleep quarter
   end
-  puts "done with drums" if stopit
   stopit2 = true if stopit
   sample :drum_splash_soft if stopit
   stop if stopit
 end
-#end
 
 ch1_1 = chord(:Eb3, :minor)
 ch1_2 = chord(:C3, :m9)
 ch2_1 = chord(:D3, :minor)
 ch2_2 = chord(:F2, :m9)
-
 sc1_1 = scale(:Eb3, :bartok, num_octaves: 2).shuffle
-sc1_2 = scale(:C3, :phrygian, num_octaves: 2)
 sc2_1 = scale(:D3, :bartok, num_octaves: 2)
-sc2_2 = scale(:F2, :phrygian, num_octaves: 2)
 
 live_loop :yay, auto_cue: false do
   4.times do
@@ -137,44 +113,36 @@ define :up_eb2 do
 end
 
 define :fill_1 do
-  play :eb4, amp: 0.6, sustain: 3
-  sleep sixteenth
-  play :c4, amp: 0.4, sustain: 0.75
-  sleep sixteenth
-  play :bb3, amp: 0.2, sustain: 2
-  sleep one + eighth
+  puts "fill_1"
+  3.times do
+    tick :filltick
+    play (ring :eb4, :c4, :bb3).look(:filltick), amp: (ring 0.6, 0.4, 0.2).look(:filltick), sustain: (ring 3, 0.75, 2).look(:filltick)
+    sleep (ring sixteenth, sixteenth, one+eighth).look(:filltick)
+  end
 end
 
 define :fill_2 do
-  sleep eighth
-  play :fs4, amp: 0.3
-  sleep sixteenth
-  play :g4, amp: 0.5
-  sleep sixteenth
-  play :bb4, amp: 0.2
-  sleep one + sixteenth
+  puts "fill_2"
+  4.times do
+    tick :fill2tick
+    play (ring :r, :fs4, :g4, :bb4).look(:fill2tick), amp: (ring 0.0, 0.3, 0.5, 0.2).look(:fill2tick)
+    sleep (ring eighth, sixteenth, sixteenth, one+sixteenth).look(:fill2tick)
+  end
 end
 
 define :c_ebass do |min, max, sust|
+  puts "c_ebass"
   vol = rrand(min, max)
-  puts vol
-  play :e3, amp: vol, sustain: sust
-  play :g3, amp: vol, sustain: sust
-  play :c4, amp: vol, sustain: sust
-  play :g2, amp: vol, sustain: sust
+  play_chord [:g2, :e3, :g3, :c4], amp: vol, sustain: sust
 end
 
-
-live_loop :pianothing, auto_cue: false do
+live_loop :pianothing, auto_cue: false, delay: 16*4 do
   use_synth :piano
   sync :beat
   stop if stopit2
   16.times do
-    sleep bar
-    stop if stopit2
-  end
-  16.times do
     sync :beat
+    puts "piano_thing"
     stop if stopit2
     up_eb2
     sleep bar - quarter
@@ -186,60 +154,40 @@ live_loop :pianothing, auto_cue: false do
       fill_2
     end
   end
+  sleep bar*16
   stop if stopit2
 end
 
 define :chordplay do |c|
   sync :beat
-  #with_fx :echo, phase: 0.25, decay: 1, max_phase: 1 do
   in_thread do 8.times do
-      play c.tick, release: 0.3, amp: 0.5
+      play c.tick(:cplay), release: 0.3, amp: 0.5
       sleep half
     end
   end
-  #end
 end
 
-uncomment do
-  live_loop :otherthing, auto_cue: false do
-    use_synth :prophet
-
-    uncomment do
-      sync :beat
-      32.times do
-        sleep bar
-      end
-    end
-    use_synth_defaults release: 4
-    4.times do
-      sync :beat
-      chordplay sc1_1
-      play :eb4, amp: 0.4
-      sleep bar
-
-      play choose(ch1_2), amp: 0.4
-      play choose(ch1_2), amp: 0.3
-      sleep bar
-    end
-    4.times do
-      sync :beat
-      chordplay sc2_1
-      sleep bar
-      play choose(ch2_2), amp: 0.4
-      play choose(ch2_2), amp: 0.3
-      sleep bar
-    end
-    uncomment do
-      sync :beat
-      32.times do
-        sleep bar
-      end
-    end
-    puts "time to stop it"
-    stopit = true
-    stop
+live_loop :otherthing, auto_cue: false, delay: 32*bar do
+  use_synth :prophet
+  use_synth_defaults release: 4
+  4.times do
+    sync :beat
+    chordplay sc1_1
+    play :eb4, amp: 0.4
+    sleep bar
+    play choose(ch1_2), amp: 0.4
+    play choose(ch1_2), amp: 0.3
+    sleep bar
   end
-
+  4.times do
+    sync :beat
+    chordplay sc2_1
+    sleep bar
+    play choose(ch2_2), amp: 0.4
+    play choose(ch2_2), amp: 0.3
+    sleep bar
+  end
+  sleep bar * 32
+  stopit = true
+  stop
 end
-
-#end #bitcrusher
