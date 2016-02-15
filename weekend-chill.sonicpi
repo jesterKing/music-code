@@ -3,7 +3,6 @@ use_debug false
 load_samples [:drum_snare_hard, :drum_snare_soft, :perc_snap, :drum_bass_soft, :drum_cymbal_open, :drum_cymbal_pedal, :bd_gas, :drum_splash_soft]
 
 stopit = false
-stopit2 = false
 
 # some helper variables to make it easier to think about duration
 bar = 4.0 # bar has four beats
@@ -28,7 +27,7 @@ stop end
 live_loop :beat, delay: quarter do
   sample :bd_gas, amp: (ring 4, 3, 2, 1).tick
   sleep one
-  stop if stopit2
+  stop if stopit
 end
 
 puts (bools 0, 0, 0, 1)
@@ -73,7 +72,6 @@ live_loop :bd, auto_cue: false, delay: quarter do
     sample :drum_cymbal_pedal, amp: (ring 0.0, 0.6, 0.0, 0.3).look(:rrr) if pedalit
     sleep quarter
   end # 4
-  stopit2 = true if stopit
   sample :drum_splash_soft if stopit
   stop if stopit
 end
@@ -88,30 +86,29 @@ sc2_1 = scale(:D3, :bartok, num_octaves: 2)
 live_loop :yay, auto_cue: false, delay: quarter do
   3.times do
     sync :beat
-    stop if stopit
     sleep half
     play ch1_1, release: 2.5
-    sleep bar
+    sleep bar - half
+    sleep half
     play ch1_2, release: 2.5
     sleep bar - half
-    stop if stopit
   end
   sleep half
   play ch1_1, release: 2.5
-  sleep bar - half
+  sleep 2*bar - half
   3.times do
     sync :beat
-    stop if stopit
     sleep half
     play ch2_1, release: 2.5
-    sleep bar
+    sleep bar - half
+    sleep half
     play ch2_2, release: 2.5
     sleep bar - half
-    stop if stopit
   end
   sleep half
   play ch2_1, release: 2.5
-  sleep bar - half
+  sleep 2*bar - half
+  stop if stopit
 end
 
 define :up_eb2 do
@@ -139,20 +136,17 @@ define :fill_2 do
   end
 end
 
-define :c_ebass do |min, max, sust|
-  vol = rrand(min, max)
-  play_chord [:g2, :e3, :g3, :c4], amp: vol, sustain: sust
+define :c_ebass do |sust|
+  play_chord [:g2, :e3, :g3, :c4], sustain: sust
 end
 
 live_loop :pianothing, auto_cue: false, delay: 16*bar + quarter do
   use_synth :piano
-  stop if stopit
-  16.times do
+  16.times do # 16 x 2 bars = 96 beats
     sync :beat
-    stop if stopit
     up_eb2
     sleep bar - quarter
-    c_ebass 0.2, 0.5, 3
+    c_ebass 3
     sleep one + one + 3*quarter
     if (spread 3, 8, rotate: 1).tick
       fill_1
@@ -160,8 +154,7 @@ live_loop :pianothing, auto_cue: false, delay: 16*bar + quarter do
       fill_2
     end
   end
-  sleep bar*16
-  stop if stopit
+  stop
 end
 
 define :chordplay do |c|
@@ -173,10 +166,10 @@ define :chordplay do |c|
   end
 end
 
-live_loop :otherthing, auto_cue: false, delay: 32*bar + quarter do
+live_loop :otherthing, auto_cue: false, delay: 16*bar + 32*bar + quarter do
   use_synth :prophet
   use_synth_defaults release: 4
-  2.times do
+  3.times do
     sync :beat
     chordplay sc1_1
     sleep bar
@@ -184,7 +177,8 @@ live_loop :otherthing, auto_cue: false, delay: 32*bar + quarter do
     play choose(ch1_2), amp: 0.3
     sleep bar
   end
-  2.times do
+  sleep 2 * bar
+  3.times do
     sync :beat
     chordplay sc2_1
     sleep bar
@@ -192,7 +186,7 @@ live_loop :otherthing, auto_cue: false, delay: 32*bar + quarter do
     play choose(ch2_2), amp: 0.3
     sleep bar
   end
-  sleep bar * 32
+  sleep bar * 16
   stopit = true
   stop
 end
