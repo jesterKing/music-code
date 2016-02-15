@@ -2,6 +2,10 @@
 # Released under CC-BY-SA licence
 #
 # Submission for https://astro-pi.org/coding-challenges/sonic-pi-music/
+#
+# Note that on all live_loops we have at least 4 beats (a bar)
+# delay. This is to allow Sonic Pi do all its loading and defining.
+# Without the delay threads will be out of sync and die prematurely :(
 
 use_bpm 76
 use_debug false
@@ -29,17 +33,17 @@ end
 
 # Here we go, the very first upbeat
 # all other live_loops wait at least a quarter of a beat
-live_loop :intro do upbeatsnare
+live_loop :intro, delay: bar do upbeatsnare
 stop end
 
-live_loop :beat, delay: quarter do
+live_loop :beat, delay: bar + quarter do
   sample :bd_gas, amp: (ring 4, 3, 2, 1).tick
   sleep one
   stop if stopit
 end
 
 # our main rythm loop
-live_loop :bd, auto_cue: false, delay: quarter do
+live_loop :bd, auto_cue: false, delay: bar+quarter do
   revolution = (bools 0, 0, 0, 1).tick
   3.times do # 3*4
     sync :beat
@@ -50,7 +54,7 @@ live_loop :bd, auto_cue: false, delay: quarter do
       end
     end
     in_thread do
-      6.times do # total duration 3, 3/4
+      6.times do
         sample (ring :drum_snare_hard, :drum_snare_soft, :drum_bass_soft, :drum_snare_hard, :drum_bass_hard, :drum_snare_soft).tick(:basstick)
         sleep (ring quarter, quarter, half, half, one, one+quarter).look(:basstick)
       end
@@ -58,20 +62,19 @@ live_loop :bd, auto_cue: false, delay: quarter do
 
     sleep quarter
     sample :perc_snap
-    sleep 3*one + half # 3 and a half
+    sleep 3 * one + half
 
     upbeatsnare # quarter
   end
   pedalit = revolution == false
   sync :beat
   sample :drum_cymbal_open, amp: 0.3, finish: 0.32 if pedalit
-  tick_reset(:rrr)
   with_fx :echo, phase: sixteenth, decay: 16*sixteenth do sample :drum_snare_soft end
-  sleep 8*sixteenth
+  sleep 8 * sixteenth
   sample :drum_cymbal_pedal, amp: 0.6 if pedalit
-  sleep 3 * quarter # 0.75
+  sleep 3 * quarter
   sample :drum_splash_soft if pedalit
-  sleep 7 * quarter # 2 1/4
+  sleep 7 * quarter
   tick_reset(:rrr)
   4.times do
     tick(:rrr)
@@ -92,7 +95,7 @@ sc1_1 = scale(:Eb3, :bartok, num_octaves: 2).shuffle
 sc2_1 = scale(:D3, :bartok, num_octaves: 2)
 
 # originality deficiency, so loop called 'yay'
-live_loop :yay, auto_cue: false, delay: quarter do
+live_loop :yay, auto_cue: false, delay: bar+quarter do
   3.times do
     sync :beat
     sleep half
@@ -148,7 +151,7 @@ define :fill_2 do
 end
 
 # some piano layer
-live_loop :pianothing, auto_cue: false, delay: 16*bar + quarter do
+live_loop :pianothing, auto_cue: false, delay: bar + 16*bar + quarter do
   use_synth :piano
   16.times do # 16 x 2 bars = 96 beats
     sync :beat
@@ -175,7 +178,7 @@ define :scaleplay do |c|
   end
 end
 
-live_loop :otherthing, auto_cue: false, delay: 16*bar + 32*bar + quarter do
+live_loop :otherthing, auto_cue: false, delay: bar + 16*bar + 32*bar + quarter do
   use_synth :prophet
   use_synth_defaults release: 4
   3.times do
