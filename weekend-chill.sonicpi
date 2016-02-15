@@ -1,3 +1,8 @@
+# Week-end chill, by jesterKing, 2016
+# Released under CC-BY-SA licence
+#
+# Submission for https://astro-pi.org/coding-challenges/sonic-pi-music/
+
 use_bpm 76
 use_debug false
 load_samples [:drum_snare_hard, :drum_snare_soft, :perc_snap, :drum_bass_soft, :drum_cymbal_open, :drum_cymbal_pedal, :bd_gas, :drum_splash_soft]
@@ -12,6 +17,7 @@ quarter = 1.0 / 4 # 0.25
 eighth = 1.0 / 8 # 0.125
 sixteenth = 1.0 / 16 # 0.125 / 2
 
+# when true this signals use of cymbal pedal (and some other bits)
 pedalit = false
 
 define :upbeatsnare do
@@ -21,6 +27,8 @@ define :upbeatsnare do
   end
 end
 
+# Here we go, the very first upbeat
+# all other live_loops wait at least a quarter of a beat
 live_loop :intro do upbeatsnare
 stop end
 
@@ -30,8 +38,7 @@ live_loop :beat, delay: quarter do
   stop if stopit
 end
 
-puts (bools 0, 0, 0, 1)
-
+# our main rythm loop
 live_loop :bd, auto_cue: false, delay: quarter do
   revolution = (bools 0, 0, 0, 1).tick
   3.times do # 3*4
@@ -76,6 +83,7 @@ live_loop :bd, auto_cue: false, delay: quarter do
   stop if stopit
 end
 
+# some chord variables to allow for shorter typing (and easier changing)
 ch1_1 = chord(:Eb3, :minor)
 ch1_2 = chord(:C3, :m9)
 ch2_1 = chord(:D3, :minor)
@@ -83,6 +91,7 @@ ch2_2 = chord(:F2, :m9)
 sc1_1 = scale(:Eb3, :bartok, num_octaves: 2).shuffle
 sc2_1 = scale(:D3, :bartok, num_octaves: 2)
 
+# originality deficiency, so loop called 'yay'
 live_loop :yay, auto_cue: false, delay: quarter do
   3.times do
     sync :beat
@@ -120,6 +129,7 @@ define :up_eb2 do
   play :f3, amp: 0.5, sustain: 2
 end
 
+# quick filler, variant one
 define :fill_1 do
   3.times do
     tick :filltick
@@ -128,6 +138,7 @@ define :fill_1 do
   end
 end
 
+# quick filler, variant two
 define :fill_2 do
   4.times do
     tick :fill2tick
@@ -136,17 +147,14 @@ define :fill_2 do
   end
 end
 
-define :c_ebass do |sust|
-  play_chord [:g2, :e3, :g3, :c4], sustain: sust
-end
-
+# some piano layer
 live_loop :pianothing, auto_cue: false, delay: 16*bar + quarter do
   use_synth :piano
   16.times do # 16 x 2 bars = 96 beats
     sync :beat
     up_eb2
     sleep bar - quarter
-    c_ebass 3
+    play_chord [:g2, :e3, :g3, :c4], sustain: 3
     sleep one + one + 3*quarter
     if (spread 3, 8, rotate: 1).tick
       fill_1
@@ -157,7 +165,8 @@ live_loop :pianothing, auto_cue: false, delay: 16*bar + quarter do
   stop
 end
 
-define :chordplay do |c|
+# start playing notes given in c
+define :scaleplay do |c|
   sync :beat
   in_thread do 8.times do
       play c.tick(:cplay), release: 0.3, amp: 0.5
@@ -171,7 +180,7 @@ live_loop :otherthing, auto_cue: false, delay: 16*bar + 32*bar + quarter do
   use_synth_defaults release: 4
   3.times do
     sync :beat
-    chordplay sc1_1
+    scaleplay sc1_1
     sleep bar
     play choose(ch1_2), amp: 0.4
     play choose(ch1_2), amp: 0.3
@@ -180,7 +189,7 @@ live_loop :otherthing, auto_cue: false, delay: 16*bar + 32*bar + quarter do
   sleep 2 * bar
   3.times do
     sync :beat
-    chordplay sc2_1
+    scaleplay sc2_1
     sleep bar
     play choose(ch2_2), amp: 0.4
     play choose(ch2_2), amp: 0.3
