@@ -187,6 +187,8 @@ live_loop :otherthing, auto_cue: false, delay: 16*bar + 32*bar + quarter do
     sleep bar
   end
   sleep bar * 16
-  stopit = true
-  stop
+  uncomment do
+    stopit = true
+    stop
+  end
 end
