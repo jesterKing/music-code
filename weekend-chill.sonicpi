@@ -13,6 +13,8 @@ load_samples [:drum_snare_hard, :drum_snare_soft, :perc_snap, :drum_bass_soft, :
 
 stopit = false
 
+forever = false
+
 # some helper variables to make it easier to think about duration
 bar = 4.0 # bar has four beats
 one = 1.0 # one beat
@@ -165,7 +167,10 @@ live_loop :pianothing, auto_cue: false, delay: bar + 16*bar + quarter do
       fill_2
     end
   end
-  stop
+  stop if !forever
+  (16*bar).times do
+    sleep one
+  end
 end
 
 # start playing notes given in c
@@ -200,7 +205,7 @@ live_loop :otherthing, auto_cue: false, delay: bar + 16*bar + 32*bar + quarter d
   end
   sleep bar * 16
   uncomment do
-    stopit = true
-    stop
+    stopit = true if !forever
+    stop if !forever
   end
 end
