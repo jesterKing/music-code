@@ -1,8 +1,6 @@
 # Week-end chill, by jesterKing, 2016
 # Released under CC-BY-SA licence
 #
-# Submission for https://astro-pi.org/coding-challenges/sonic-pi-music/
-#
 # Note that on all live_loops we have at least 4 beats (a bar)
 # delay. This is to allow Sonic Pi do all its loading and defining.
 # Without the delay threads will be out of sync and die prematurely :(
